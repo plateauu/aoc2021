@@ -5,6 +5,7 @@ use std::str::{FromStr, SplitWhitespace};
 
 pub fn run() {
     count_position("src/day2/input.txt");
+    count_position_2("src/day2/input.txt");
 }
 
 fn read_file(filename: &str) -> Vec<Instruction> {
@@ -68,4 +69,27 @@ fn count_position(file_name: &str) {
     let vertical_index: i32 = vertical.iter().sum();
 
     println!("Result of second half day: {}. Completely in rust!", horizontal_index * vertical_index);
+}
+
+fn count_position_2(file_name: &str) {
+    let instructions = read_file(file_name);
+    let mut horizontal = Vec::new();
+    let mut depth = Vec::new();
+    let mut aim: i32 = 0;
+
+    for i in instructions {
+        match i.direction {
+            Direction::Forward => {
+                horizontal.push(i.steps);
+                depth.push(aim * i.steps)
+            }
+            Direction::Down => { aim = aim + i.steps }
+            Direction::Up => { aim = aim - i.steps }
+        }
+    }
+
+    let horizontal_index: i32 = horizontal.iter().sum();
+    let depth_index: i32 = depth.iter().sum();
+
+    println!("Result of second half day: {}. Completely in rust!", horizontal_index * depth_index);
 }
