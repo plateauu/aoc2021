@@ -6,26 +6,11 @@ use std::ops::Mul;
 use std::str::FromStr;
 
 pub fn run() {
-    count("src/day3/input.txt");
+    part_1("src/day3/input.txt");
 }
 
-fn prepare_map() -> HashMap<usize, Count> {
-    let mut map: HashMap<usize, Count> = HashMap::new();
-    let x = || Count { bit: 0, zero: 0 };
-    map.insert(0, x());
-    map.insert(1, x());
-    map.insert(2, x());
-    map.insert(3, x());
-    map.insert(4, x());
-    map.insert(5, x());
-    map.insert(6, x());
-    map.insert(7, x());
-    map.insert(8, x());
-    map.insert(9, x());
-    map.insert(10, x());
-    map.insert(11, x());
-    map
-}
+const BIT: char = '1';
+const ZERO: char = '0';
 
 struct Count {
     bit: i32,
@@ -43,12 +28,12 @@ impl Count {
     }
 
     fn max(&self) -> i32 {
-        if self.bit > self.zero {
+        return if self.bit > self.zero {
             println!("BIT wins");
-            return 1;
+            1
         } else {
             println!("ZERO wins");
-            return 0;
+            0
         }
     }
 
@@ -57,18 +42,37 @@ impl Count {
     }
 }
 
-const BIT: char = '1';
-const ZERO: char = '0';
+fn prepare_map(first_line_len: usize) -> HashMap<usize, Count> {
+    let mut map: HashMap<usize, Count> = HashMap::new();
+    let x = || Count { bit: 0, zero: 0 };
+    for i in 0..first_line_len {
+        map.insert(i, x());
+    }
+    map
+}
 
-fn count(file_name: &str) {
+fn part_1(file_name: &str) -> i64 {
     let instructions = read_file(file_name);
-    let mut map: HashMap<usize, Count> = prepare_map();
+    let first_line_len = instructions[0].len();
+    let mut map: HashMap<usize, Count> = prepare_map(first_line_len);
 
+    increment_values(instructions, &mut map);
+    let mut sorted_elements = sort_count_map(&mut map);
+    let (to_gamma_rate_binary_string, gamma_rate) = find_gamma_rate(&mut sorted_elements);
+    let (to_ipsilon_rate_binary_string, ipsilon_rate) = find_ipsilon_rate(&mut sorted_elements);
+
+    println!("Gamma binary string: {}, decimal: {} ", to_gamma_rate_binary_string, gamma_rate);
+    println!("Ipsilon binary string: {}, decimal: {} ", to_ipsilon_rate_binary_string, ipsilon_rate);
+    let result = gamma_rate * ipsilon_rate;
+    println!("Result: {:?} Completely in rust!", result);
+    return result;
+}
+
+fn increment_values(instructions: Vec<String>, map: &mut HashMap<usize, Count>) {
     let mut line_counter = 0;
     for single_line in instructions.iter() {
         line_counter += 1;
         println!("line #{}, value: {}", line_counter, single_line);
-        let len = single_line.len();
 
         let mut sign_counter: usize = 0;
         for i in single_line.chars() {
@@ -81,7 +85,9 @@ fn count(file_name: &str) {
             sign_counter += 1;
         }
     }
+}
 
+fn sort_count_map(map: &mut HashMap<usize, Count>) -> Vec<(&usize, &Count)> {
     let mut sorted_elements: Vec<(&usize, &Count)> = map.iter().collect();
     println!("#Checking elements order in map");
     sorted_elements.sort_by(|a, b| a.0.cmp(&b.0));
@@ -89,7 +95,10 @@ fn count(file_name: &str) {
         print!(" {} ", i)
     }
     println!("\n");
+    sorted_elements
+}
 
+fn find_gamma_rate(sorted_elements: &mut Vec<(&usize, &Count)>) -> (String, i64) {
     let to_gamma_rate_binary_string = sorted_elements.iter()
         .map(|(k, count)| {
             println!("Element: #{}", k);
@@ -102,7 +111,10 @@ fn count(file_name: &str) {
         });
 
     let gamma_rate = i64::from_str_radix((&*to_gamma_rate_binary_string), 2).unwrap();
+    (to_gamma_rate_binary_string, gamma_rate)
+}
 
+fn find_ipsilon_rate(sorted_elements: &mut Vec<(&usize, &Count)>) -> (String, i64) {
     let to_ipsilon_rate_binary_string = sorted_elements.iter()
         .map(|(k, count)| {
             println!("Element: #{}", k);
@@ -115,10 +127,7 @@ fn count(file_name: &str) {
         });
 
     let ipsilon_rate = i64::from_str_radix(&*to_ipsilon_rate_binary_string, 2).unwrap();
-
-    println!("Gamma binary string: {}, decimal: {} ", to_gamma_rate_binary_string, gamma_rate);
-    println!("Ipsilon binary string: {}, decimal: {} ", to_ipsilon_rate_binary_string, ipsilon_rate);
-    println!("Result: {:?} Completely in rust!", gamma_rate.mul(ipsilon_rate));
+    (to_ipsilon_rate_binary_string, ipsilon_rate)
 }
 
 fn read_file(filename: &str) -> Vec<String> {
@@ -132,4 +141,15 @@ fn read_file(filename: &str) -> Vec<String> {
 
 fn count_position_2(file_name: &str) {
     println!("Result: {}. Completely in rust!", "todo");
+}
+
+#[cfg(test)]
+mod day2_test {
+    use super::*;
+
+    #[test]
+    fn day3_part_1(){
+        let result = part_1("src/day3/test_input.txt");
+        assert_eq!(198, result);
+    }
 }
