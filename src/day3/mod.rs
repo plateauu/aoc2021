@@ -34,11 +34,11 @@ impl Count {
         } else {
             println!("ZERO wins");
             0
-        }
+        };
     }
 
     fn min(&self) -> i32 {
-        if self.bit > self.zero { 0 } else {  1 }
+        if self.bit > self.zero { 0 } else { 1 }
     }
 }
 
@@ -64,6 +64,23 @@ fn part_1(file_name: &str) -> i64 {
     println!("Gamma binary string: {}, decimal: {} ", to_gamma_rate_binary_string, gamma_rate);
     println!("Ipsilon binary string: {}, decimal: {} ", to_ipsilon_rate_binary_string, ipsilon_rate);
     let result = gamma_rate * ipsilon_rate;
+    println!("Result: {:?} Completely in rust!", result);
+    return result;
+}
+
+fn part_2(file_name: &str) -> i64 {
+    let instructions = read_file(file_name);
+    let first_line_len = instructions[0].len();
+    let mut map: HashMap<usize, Count> = prepare_map(first_line_len);
+
+    increment_values(instructions, &mut map);
+    let mut sorted_elements = sort_count_map(&mut map);
+    let (oxygen_rate_binary_string, oxygen_rate) = find_scrubber_rate(&sorted_elements, &instructions);
+    let (scrubber_rate_binary_string, scrubber_rate) = find_ipsilon_rate(&mut sorted_elements);
+
+    println!("Oxygen rating binary string: {}, decimal: {} ", oxygen_rate_binary_string, oxygen_rate);
+    println!("Scrubber rating binary string: {}, decimal: {} ", scrubber_rate_binary_string, scrubber_rate);
+    let result = oxygen_rate * scrubber_rate;
     println!("Result: {:?} Completely in rust!", result);
     return result;
 }
@@ -96,6 +113,24 @@ fn sort_count_map(map: &mut HashMap<usize, Count>) -> Vec<(&usize, &Count)> {
     }
     println!("\n");
     sorted_elements
+}
+
+fn find_scrubber_rate(sorted_elements: &Vec<(&usize, &Count)>, instructions: &Vec<String>) -> (String, i64) {
+    let mut result = instructions;
+    for (i, count) in sorted_elements.iter() {
+        let idx = **i;
+        if result.len() == 1 { break; } else {
+            let max = count.max();
+            let new_res = *result.into_iter()
+                .map(|x|*x)
+                .filter(|ins| ins.chars().nth(idx).unwrap().to_string() == max.to_string())
+                .collect::<Vec<String>>();
+            result = new_res;
+        }
+    }
+    let scrubber_rate_binary_string = *result[0];
+    let scrubber_rate = i64::from_str_radix((&*scrubber_rate_binary_string), 2).unwrap();
+    (String::from(scrubber_rate_binary_string), scrubber_rate)
 }
 
 fn find_gamma_rate(sorted_elements: &mut Vec<(&usize, &Count)>) -> (String, i64) {
@@ -148,8 +183,14 @@ mod day2_test {
     use super::*;
 
     #[test]
-    fn day3_part_1(){
+    fn day3_part_1() {
         let result = part_1("src/day3/test_input.txt");
         assert_eq!(198, result);
+    }
+
+    #[test]
+    fn day3_part_2() {
+        let result = part_2("src/day3/test_input.txt");
+        assert_eq!(230, result);
     }
 }
